@@ -1,83 +1,97 @@
-#include <iostream>
+#include <ncurses.h>
 #include "dungeon.h"
 
 namespace Dungeon {
 
-const int ROW {5};
-const int COL {5};
-
-
-
-struct {
-    char symbol {'G'};
-    int X {0};
-    int Y {0};
-} Player{};
-
-enum class Fields : char
+enum class Fields : unsigned char
 {
     Field = '.',
-    Tree = 'T',
-    Exit = 'X',
+    Trap = 'X',
+    Wall = '#',
+    Exit = '$',
 };
 
-//static char Field {'.'};
-//static char Tree {'T'};
-//static char Exit {'X'};
-
+static const int ROW {10};
+static const int COL {10};
 
 static Fields map [ROW][COL]{
-    {Fields::Field,Fields::Field,Fields::Field,Fields::Tree,Fields::Field},
-    {Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field},
-    {Fields::Field,Fields::Field,Fields::Field,Fields::Tree,Fields::Field},
-    {Fields::Field,Fields::Field,Fields::Tree,Fields::Field,Fields::Field},
-    {Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Exit},
+    {Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Wall},
+    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Exit,Fields::Wall},
+    {Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall},
+
 };
+
+struct {
+    unsigned char symbol {'@'};
+    int X {1};
+    int Y {1};
+} Player{};
+
+
 
 
 void showMap ()
 {
+    initscr();
+    clear();
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < ROW; i++)
     {
-        for (int j = 0; j < 5; j++)
+        for (int j = 0; j < COL; j++)
             if ((i == Player.Y ) && (j == Player.X))
             {
-                std::cout << Player.symbol << ' ';
+                printw("%c " , Player.symbol);
             }
             else
             {
-                std::cout << static_cast<char>(map[i][j]) << ' ';
+                printw("%c ", static_cast<char>(map[i][j]));
             }
-        std::cout << std::endl;
+        printw(" \n");
     }
 
-
-
+    endwin();
+    refresh();
 }
 
 void playerMovement ()
 {
+    //int move;
+    //std::cin >> move;
 
-    char command;
-    std::cin >> command;
-
-    switch (command) {
+    switch (getch()) {
     case 'w':
-        if (Player.Y == 0)
+        if (Player.Y == 1)
         {
-            std::cout << "You can move there!" << std::endl;
             break;
         }
         --Player.Y;
         break;
     case 's':
+        if (Player.Y == 8)
+        {
+            break;
+        }
         ++Player.Y;
         break;
     case 'a':
+        if (Player.X == 1)
+        {
+            break;
+        }
         --Player.X;
         break;
     case 'd':
+        if (Player.X == 8)
+        {
+            break;
+        }
         ++Player.X;
         break;
     default:
@@ -92,9 +106,15 @@ bool checkPlayer()
     bool goahead = true;
 
     switch (map[Player.Y][Player.X]) {
-    case Fields::Tree:
-        Player.symbol = '=';
+    case Fields::Trap:
+        Player.symbol = '+';
         goahead = false;
+        printf(" You step on trap! Game over!");
+        break;
+    case Fields::Exit:
+        Player.symbol = '!';
+        goahead = false;
+        printf(" Congratulation! You found Exit!");
         break;
     default:
         break;

@@ -9,3 +9,5 @@ SOURCES += \
 
 HEADERS += \
     dungeon.h
+
+LIBS += -L/usr/include -lncurses
