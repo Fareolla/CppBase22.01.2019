@@ -1,32 +1,19 @@
 #include <ncurses.h>
+#include <vector>
 #include "dungeon.h"
+#include <cstdlib>
+#include <ctime>
 
 namespace Dungeon {
 
-enum class Fields : unsigned char
-{
-    Field = '.',
-    Trap = 'X',
-    Wall = '#',
-    Exit = '$',
-};
-
-static const int ROW {10};
-static const int COL {10};
-
-static Fields map [ROW][COL]{
-    {Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Field,Fields::Trap,Fields::Field,Fields::Field,Fields::Wall},
-    {Fields::Wall,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Field,Fields::Exit,Fields::Wall},
-    {Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall,Fields::Wall},
-
-};
+static int ROW {15};
+static int COL {15};
+static int Range {arrayLength(ROW, COL)};
+static const char field {'.'};
+static const char trap {'X'};
+static const char wall {'#'};
+static const char exit {'!'};
+static std::vector< std::vector<char> > level (Range);
 
 struct {
     unsigned char symbol {'@'};
@@ -34,25 +21,69 @@ struct {
     int Y {1};
 } Player{};
 
+int arrayLength (int arg1, int arg2)
+{
+    int result {};
 
+    if (arg1 > arg2)
+    {
+        result = arg1;
+    }
+    else {
+        result = arg2;
+    }
+    return result;
+}
 
+void setDungeon()
+{
+    int lineX = COL - 2;
+    int lineY = ROW - 2;
+
+    srand (time (0));
+
+    for (int i = 0; i < Range; i++) {
+        level [i] = std::vector<char>(COL);
+        for (int j = 0; j < level[i].size(); j++)
+        {
+            if (j== 0 || j == COL - 1 || i==0 || i== ROW - 1)
+            {
+                level [i][j] = wall;
+            }
+            else
+            {
+                level [i][j] = field;
+            }
+        }
+    }
+
+    for (int k = 0; k < Range; ++k)
+    {
+        level [rand() % lineX + 1][rand() % lineY + 1] = trap;
+    }
+
+    level [rand() % lineX + 1][rand() % lineY + 1] = exit;
+}
 
 void showMap ()
 {
     initscr();
     clear();
 
-    for (int i = 0; i < ROW; i++)
-    {
-        for (int j = 0; j < COL; j++)
+    for (int i = 0; i < ROW ; ++i) {
+
+        for (int j = 0; j < COL ; ++j)
+        {
             if ((i == Player.Y ) && (j == Player.X))
             {
                 printw("%c " , Player.symbol);
             }
             else
             {
-                printw("%c ", static_cast<char>(map[i][j]));
+                printw("%c ", level[i][j]);
             }
+        }
+
         printw(" \n");
     }
 
@@ -60,10 +91,9 @@ void showMap ()
     refresh();
 }
 
+
 void playerMovement ()
 {
-    //int move;
-    //std::cin >> move;
 
     switch (getch()) {
     case 'w':
@@ -74,7 +104,7 @@ void playerMovement ()
         --Player.Y;
         break;
     case 's':
-        if (Player.Y == 8)
+        if (Player.Y == ROW - 2)
         {
             break;
         }
@@ -88,7 +118,7 @@ void playerMovement ()
         --Player.X;
         break;
     case 'd':
-        if (Player.X == 8)
+        if (Player.X == COL - 2)
         {
             break;
         }
@@ -105,16 +135,16 @@ bool checkPlayer()
 {
     bool goahead = true;
 
-    switch (map[Player.Y][Player.X]) {
-    case Fields::Trap:
+    switch (level[Player.Y][Player.X]) {
+    case trap :
         Player.symbol = '+';
         goahead = false;
-        printf(" You step on trap! Game over!");
+        printf(" You step on trap! Game over! ");
         break;
-    case Fields::Exit:
+    case exit:
         Player.symbol = '!';
         goahead = false;
-        printf(" Congratulation! You found Exit!");
+        printf(" Congratulation! You found Exit! ");
         break;
     default:
         break;

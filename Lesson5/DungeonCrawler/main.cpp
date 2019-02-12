@@ -3,7 +3,10 @@
 int main()
 {
 
+
     bool goahead = true;
+
+    Dungeon::setDungeon();
 
     do
     {
