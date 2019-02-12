@@ -3,16 +3,17 @@
 #include "dungeon.h"
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 namespace Dungeon {
 
-static int ROW {15};
-static int COL {15};
+static int ROW {Row()};
+static int COL {Col ()};
 static int Range {arrayLength(ROW, COL)};
 static const char field {'.'};
 static const char trap {'X'};
 static const char wall {'#'};
-static const char exit {'!'};
+static const char exit {'E'};
 static std::vector< std::vector<char> > level (Range);
 
 struct {
@@ -20,6 +21,19 @@ struct {
     int X {1};
     int Y {1};
 } Player{};
+
+int Row(){
+    printf("Please enter a Row number:  ");
+    int result {};
+    std::cin >> result;
+    return result;
+}
+int Col(){
+    printf("Please enter a Column number:  ");
+    int result {};
+    std::cin >> result;
+    return result;
+}
 
 int arrayLength (int arg1, int arg2)
 {
@@ -37,6 +51,7 @@ int arrayLength (int arg1, int arg2)
 
 void setDungeon()
 {
+
     int lineX = COL - 2;
     int lineY = ROW - 2;
 
